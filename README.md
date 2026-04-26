@@ -26,4 +26,4 @@ Most commercial crypto terminals are overpriced "black boxes." They charge you f
 | **Setup** | DIY / Enthusiast | Plug & Play | App Registration |
 
 ![alt text](https://github.com/tomasz2001/lili_bit_pay/blob/main/lili_photo.jpeg?raw=true "IMAGE1")
-![alt text](https://github.com/tomasz2001/lili_bit_pay/blob/main/lili_photo2.jpeg?raw=true "IMAGE2")
+hack the planet
