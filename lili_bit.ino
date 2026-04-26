@@ -1,0 +1,242 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
+
+const char* ssid = ""; // you wifi network name 
+const char* password = ""; // you wifi password 
+
+const char* address = "ltc1---"; // you LTC wallet 
+String apiKey = ""; // you free api key for blockcypher
+
+long balance;
+long unconfirmed;
+long history;
+long take;
+long bate;
+int work = 1000;
+
+// you walllet qrcode bitmap
+// generator qrcode here https://qrcode.tec-it.com/en
+// generate bitmap for qrcode here https://javl.github.io/image2cpp/ !! TAKE [Invert image colors] !! size bitmap 62x62
+const unsigned char epd_bitmap_Bitmap [] PROGMEM = {
+	0xff, 0xfe
+};
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+String httpsGET(String url) {
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  //Serial.println("REQUEST:");
+  //Serial.println(url);
+
+  if (!client.connect("api.blockcypher.com", 443)) {
+    Serial.println("CONNECT FAIL");
+    return "";
+  }
+
+  client.println("GET " + url + " HTTP/1.1");
+  client.println("Host: api.blockcypher.com");
+  client.println("Connection: close");
+  client.println();
+
+  while (client.connected()) {
+    String line = client.readStringUntil('\n');
+    if (line == "\r") break;
+  }
+
+  String body = "";
+  while (client.available()) {
+    body += client.readStringUntil('\n');
+  }
+
+  //Serial.println("=== RESPONSE ===");
+  //Serial.println(body);
+
+  return body;
+}
+
+String formatLTC(long value) {
+
+  long whole = value / 100000000;
+  long frac  = value % 100000000;
+
+
+  String fracStr = String(frac);
+  while (fracStr.length() < 8) {
+    fracStr = "0" + fracStr;
+  }
+
+
+  while (fracStr.endsWith("0")) {
+    fracStr.remove(fracStr.length() - 1);
+  }
+
+  if (fracStr.length() == 0) {
+    return String(whole);
+  }
+
+  return String(whole) + "." + fracStr;
+}
+
+
+long extractBalance(String json) {
+  int pos = json.indexOf("\"balance\":");
+  if (pos == -1) {
+    Serial.println("NO BALANCE KEY");
+    return -1;
+  }
+
+  String sub = json.substring(pos + 10);
+  sub.trim();
+
+  int end = sub.indexOf(",");
+  if (end == -1) end = sub.indexOf("}");
+
+  String value = sub.substring(0, end);
+
+  long balance = value.toInt();
+
+  //Serial.println("PARSED BALANCE:");
+  //Serial.println(balance);
+
+  return balance;
+}
+long extractUnconfirmed(String json) {
+  int p = json.indexOf("\"unconfirmed_balance\":");
+  if (p == -1) return -1;
+
+  String sub = json.substring(p + 24);
+  int end = sub.indexOf(",");
+  if (end == -1) end = sub.indexOf("}");
+
+  return sub.substring(0, end).toInt();
+}
+
+bool getBalances() {
+
+  String url = "/v1/ltc/main/addrs/" + String(address) + "?token=" + apiKey;
+
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  if (!client.connect("api.blockcypher.com", 443)) {
+    Serial.println("CONNECT FAIL");
+    return false;
+  }
+
+  client.println("GET " + url + " HTTP/1.1");
+  client.println("Host: api.blockcypher.com");
+  client.println("Connection: close");
+  client.println();
+
+  // skip headers
+  while (client.connected()) {
+    String line = client.readStringUntil('\n');
+    if (line == "\r") break;
+  }
+
+  String json = "";
+  unsigned long t = millis();
+
+  while (millis() - t < 5000) {
+    while (client.available()) {
+      json += (char)client.read();
+      t = millis();
+    }
+  }
+
+  if (json.length() == 0 || json.indexOf("error") != -1) {
+    Serial.println("API ERROR");
+    return false;
+  }
+
+  balance = extractBalance(json);
+  unconfirmed = extractUnconfirmed(json);
+
+  return true;
+}
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    //Serial.println("OLED error");
+    while (true);
+  }
+
+  randomSeed(analogRead(0));
+
+
+  display.clearDisplay();
+
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(30, 10);
+  display.println("_lili_");
+
+  display.setCursor(25, 32);
+  display.println("BIT-PAY");
+
+  display.setTextSize(1);
+  display.setCursor(5, 55);
+  display.println("by bas_ic");
+
+  display.display();
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    //Serial.print(".");
+  }
+
+
+  //Serial.print("IP: ");
+  //Serial.println(WiFi.localIP());
+
+  delay(2000);
+  display.clearDisplay();
+}
+
+void loop() {
+  display.clearDisplay();
+
+  work = work + 1;
+
+  if(work >= 40){
+    getBalances();
+    if(balance != history){
+      take = balance - history;
+      history = balance;
+    }
+    work = 0;
+    display.setCursor(0, 55);
+    display.println("update..");
+  }
+  display.drawBitmap(66, 0, epd_bitmap_Bitmap, 62, 62, SSD1306_WHITE);
+  display.setCursor(0, 5);
+  display.println(formatLTC(balance));
+  display.setCursor(0, 15);
+  display.println("balance");
+  if(take != 0 and take != balance){
+    display.setCursor(0, 35);
+    display.setTextSize(1);
+    display.println(formatLTC(take));
+    display.setCursor(0, 45);
+    display.println("take");
+    display.setTextSize(1);
+  }
+  display.display();
+  delay(1000);
+};
