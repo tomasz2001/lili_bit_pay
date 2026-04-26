@@ -1,4 +1,5 @@
 # lili_bit_pay
+License: AGPLv3
 
 lili_bit_pay is low cost and open-source litecoin pay terminal 
 this project use xiao-esp32-c6 and popular i2c oled 128x64 screan
