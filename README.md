@@ -26,6 +26,9 @@ Most commercial crypto terminals are overpriced "black boxes." They charge you f
 | **Independence** | **High.** Decentralized. | **Low.** Server dependent. | **Low.** Risk of freezes. |
 | **Setup** | DIY / Enthusiast | Plug & Play | App Registration |
 
+
+
+
 # depression freeze list
 
 | **CODE** | **wat hapent** | **how fix shis shit** |
