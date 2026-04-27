@@ -34,7 +34,7 @@ Most commercial crypto terminals are overpriced "black boxes." They charge you f
 
 | **CODE** | **wat hapent** | **how fix shis shit** |
 | :--- | :----- | :------ |
-| **E_A0** | API say [fuck you] for you terminal or you terminal have problem to con this API | chceck apiKey wifi data and network conetion |
+| **E_A0** | API say [fuck you] for your terminal or you terminal have problem to con this API | check api Key wifi data and network connection |
 
 
 ![alt text](https://github.com/tomasz2001/lili_bit_pay/blob/main/lili_photo.jpeg?raw=true "IMAGE1")
