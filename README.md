@@ -1,4 +1,5 @@
 # lili_bit_pay
+License: AGPLv3
 
 lili_bit_pay is low cost and open-source litecoin pay terminal 
 this project use xiao-esp32-c6 and popular i2c oled 128x64 screan
@@ -26,4 +27,4 @@ Most commercial crypto terminals are overpriced "black boxes." They charge you f
 | **Setup** | DIY / Enthusiast | Plug & Play | App Registration |
 
 ![alt text](https://github.com/tomasz2001/lili_bit_pay/blob/main/lili_photo.jpeg?raw=true "IMAGE1")
-![alt text](https://github.com/tomasz2001/lili_bit_pay/blob/main/lili_photo2.jpeg?raw=true "IMAGE2")
+hack the planet
