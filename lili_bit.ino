@@ -8,6 +8,8 @@
 const char* ssid = ""; // you wifi network name 
 const char* password = ""; // you wifi password 
 
+const char* depression = "";
+
 const char* address = "ltc1---"; // you LTC wallet 
 String apiKey = ""; // you free api key for blockcypher
 
@@ -25,7 +27,7 @@ const unsigned char qr_code [] PROGMEM = {
 	0xff, 0xfe
 };
 
-//logo 40x40
+//logo
 const unsigned char logo [] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -190,7 +192,7 @@ bool getBalances() {
   }
 
   if (json.length() == 0 || json.indexOf("error") != -1) {
-    Serial.println("API ERROR");
+    depression = "E_A0";
     return false;
   }
 
@@ -226,8 +228,7 @@ void setup() {
   display.println("by bas_ic");
 
   display.setCursor(5, 10);
-  display.println("try wifi");
-
+  display.println("try WIFI");
   display.display();
   WiFi.begin(ssid, password);
 
@@ -235,7 +236,10 @@ void setup() {
     delay(500);
     //Serial.print(".");
   }
-
+  getBalances();
+  display.setCursor(5, 25);
+  display.println("try API");
+  display.display();
 
   //Serial.print("IP: ");
   //Serial.println(WiFi.localIP());
@@ -284,11 +288,26 @@ void loop() {
       digitalWrite(LED_BUILTIN, LOW); 
     
     }
-
+    
     display.display();
   }
 
+  if(depression != ""){
+      display.fillRect(0, 0, 128, 70, SSD1306_WHITE); // biały pasek
+      
+      display.setTextColor(SSD1306_BLACK); // czarny tekst
+      display.setCursor(5, 5);
+      display.println("THIS TERMINAL HAVE  A DEPRESSION");
+      display.setCursor(5, 25);
+      display.println("PLESSE CHECK README.md by fix this problem");
+      display.setCursor(40, 45);
+      display.setTextSize(2);
+      display.println(depression);
 
+      display.setTextColor(SSD1306_WHITE);
+      display.setTextSize(1);
+      display.display();
+  };
   yield();
   delay(100);
   
