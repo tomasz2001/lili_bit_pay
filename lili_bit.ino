@@ -68,39 +68,6 @@ const unsigned char logo [] PROGMEM = {
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-String httpsGET(String url) {
-  WiFiClientSecure client;
-  client.setInsecure();
-
-  //Serial.println("REQUEST:");
-  //Serial.println(url);
-
-  if (!client.connect("api.blockcypher.com", 443)) {
-    Serial.println("CONNECT FAIL");
-    return "";
-  }
-
-  client.println("GET " + url + " HTTP/1.1");
-  client.println("Host: api.blockcypher.com");
-  client.println("Connection: close");
-  client.println();
-
-  while (client.connected()) {
-    String line = client.readStringUntil('\n');
-    if (line == "\r") break;
-  }
-
-  String body = "";
-  while (client.available()) {
-    body += client.readStringUntil('\n');
-  }
-
-  //Serial.println("=== RESPONSE ===");
-  //Serial.println(body);
-
-  return body;
-}
-
 String formatLTC(long value) {
 
   long whole = value / 100000000;
@@ -167,6 +134,7 @@ bool getBalances() {
 
   if (!client.connect("api.blockcypher.com", 443)) {
     Serial.println("CONNECT FAIL");
+    depression = "E_A0";
     return false;
   }
 
