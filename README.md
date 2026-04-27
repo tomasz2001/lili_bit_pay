@@ -27,8 +27,9 @@ Most commercial crypto terminals are overpriced "black boxes." They charge you f
 | **Setup** | DIY / Enthusiast | Plug & Play | App Registration |
 
 
-
-
+ /\
+\/ \
+/\\/
 # depression freeze list
 
 | **CODE** | **wat hapent** | **how fix shis shit** |
