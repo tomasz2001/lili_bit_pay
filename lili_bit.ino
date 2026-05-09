@@ -5,20 +5,20 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
-const char* ssid = ""; // you wifi network name 
-const char* password = ""; // you wifi password 
+const char* ssid = "aaaaaa"; // your wifi network name
+const char* password = "meshmesh"; // your wifi password
 
 const char* depression = "";
 
-const char* address = "ltc1---"; // you LTC wallet 
-String apiKey = ""; // you free api key for blockcypher
+const char* address = "4yGfhamsamXkMLUThdLSbBd48BH8iLUxsZXwoikBDoeM"; // Solana public address
+String apiKey = "d3c9515c-028f-43ac-999a-d75564064c74"; // Helius API key
+String heliusCluster = "devnet"; // use devnet
 
-long balance;
-long unconfirmed;
-long history;
-long take;
-long bate;
-int work = 1000;
+int64_t balance = 0;
+int64_t unconfirmed = 0;
+int64_t history = 0;
+int64_t take = 0;
+int work = 100;
 
 // you walllet qrcode bitmap
 // generator qrcode here https://qrcode.tec-it.com/en
@@ -68,112 +68,32 @@ const unsigned char logo [] PROGMEM = {
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-String httpsGET(String url) {
-  WiFiClientSecure client;
-  client.setInsecure();
-
-  //Serial.println("REQUEST:");
-  //Serial.println(url);
-
-  if (!client.connect("api.blockcypher.com", 443)) {
-    Serial.println("CONNECT FAIL");
-    return "";
-  }
-
-  client.println("GET " + url + " HTTP/1.1");
-  client.println("Host: api.blockcypher.com");
-  client.println("Connection: close");
-  client.println();
-
-  while (client.connected()) {
-    String line = client.readStringUntil('\n');
-    if (line == "\r") break;
-  }
-
-  String body = "";
-  while (client.available()) {
-    body += client.readStringUntil('\n');
-  }
-
-  //Serial.println("=== RESPONSE ===");
-  //Serial.println(body);
-
-  return body;
-}
-
-String formatLTC(long value) {
-
-  long whole = value / 100000000;
-  long frac  = value % 100000000;
-
-
-  String fracStr = String(frac);
-  while (fracStr.length() < 8) {
-    fracStr = "0" + fracStr;
-  }
-
-
-  while (fracStr.endsWith("0")) {
-    fracStr.remove(fracStr.length() - 1);
-  }
-
-  if (fracStr.length() == 0) {
-    return String(whole);
-  }
-
-  return String(whole) + "." + fracStr;
-}
-
-
-long extractBalance(String json) {
-  int pos = json.indexOf("\"balance\":");
-  if (pos == -1) {
-    Serial.println("NO BALANCE KEY");
-    return -1;
-  }
-
-  String sub = json.substring(pos + 10);
-  sub.trim();
-
-  int end = sub.indexOf(",");
-  if (end == -1) end = sub.indexOf("}");
-
-  String value = sub.substring(0, end);
-
-  long balance = value.toInt();
-
-  //Serial.println("PARSED BALANCE:");
-  //Serial.println(balance);
-
-  return balance;
-}
-long extractUnconfirmed(String json) {
-  int p = json.indexOf("\"unconfirmed_balance\":");
-  if (p == -1) return -1;
-
-  String sub = json.substring(p + 24);
-  int end = sub.indexOf(",");
-  if (end == -1) end = sub.indexOf("}");
-
-  return sub.substring(0, end).toInt();
+String heliusHost() {
+  if (heliusCluster == "devnet") return "devnet.helius-rpc.com";
+  return "mainnet.helius-rpc.com";
 }
 
 bool getBalances() {
-
-  String url = "/v1/ltc/main/addrs/" + String(address) + "?token=" + apiKey;
+  String host = heliusHost();
+  String path = "/?api-key=" + apiKey;
+  String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"" + String(address) + "\"]}";
 
   WiFiClientSecure client;
   client.setInsecure();
 
-  if (!client.connect("api.blockcypher.com", 443)) {
+  if (!client.connect(host.c_str(), 443)) {
     Serial.println("CONNECT FAIL");
+    depression = "E_A0";
     return false;
   }
 
-  client.println("GET " + url + " HTTP/1.1");
-  client.println("Host: api.blockcypher.com");
+  client.println("POST " + path + " HTTP/1.1");
+  client.println("Host: " + host);
+  client.println("Content-Type: application/json");
+  client.println("Content-Length: " + String(body.length()));
   client.println("Connection: close");
   client.println();
+  client.print(body);
 
   // skip headers
   while (client.connected()) {
@@ -183,7 +103,6 @@ bool getBalances() {
 
   String json = "";
   unsigned long t = millis();
-
   while (millis() - t < 5000) {
     while (client.available()) {
       json += (char)client.read();
@@ -191,16 +110,43 @@ bool getBalances() {
     }
   }
 
-  if (json.length() == 0 || json.indexOf("error") != -1) {
+  if (json.length() == 0 || json.indexOf("\"error\"") != -1) {
+    Serial.println(json);
     depression = "E_A0";
     return false;
   }
 
-  balance = extractBalance(json);
-  unconfirmed = extractUnconfirmed(json);
+  StaticJsonDocument<768> doc;
+  DeserializationError err = deserializeJson(doc, json);
+  if (err || doc["result"]["value"].isNull()) {
+    Serial.println("PARSE FAIL");
+    Serial.println(json);
+    depression = "E_A0";
+    return false;
+  }
 
+  balance = doc["result"]["value"].as<int64_t>();
+  unconfirmed = 0;
   return true;
 }
+
+// removed LTC helper; using formatSOL for Solana (lamports -> SOL)
+
+
+String formatSOL(int64_t value) {
+  int64_t whole = value / 1000000000LL;
+  int64_t frac = value % 1000000000LL;
+  if (frac < 0) frac = -frac;
+
+  String fracStr = String(frac);
+  while (fracStr.length() < 9) fracStr = "0" + fracStr;
+  while (fracStr.endsWith("0")) fracStr.remove(fracStr.length() - 1);
+
+  if (fracStr.length() == 0) return String(whole);
+  return String(whole) + "." + fracStr;
+}
+
+// BlockCypher code removed — using Helius JSON-RPC getBalances() above
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   
@@ -261,13 +207,13 @@ void loop() {
     
     display.drawBitmap(66, 0, qr_code, 62, 62, SSD1306_WHITE);
     display.setCursor(0, 5);
-    display.println(formatLTC(balance));
+    display.println(formatSOL(balance));
     display.setCursor(0, 15);
-    display.println("balance");
+    display.println("SOL");
     if(take != 0 and take != balance){
       display.setCursor(0, 35);
       display.setTextSize(1);
-      display.println(formatLTC(take));
+      display.println(formatSOL(take));
       display.setCursor(0, 45);
       display.println("take");
       display.setTextSize(1);
