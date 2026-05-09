@@ -14,7 +14,7 @@
 const char* ssid = ""; // you wifi network name 
 const char* password = ""; // you wifi password 
 
-const char* depression = "";
+char* depression = NULL;
 
 const char* address = "ltc1--"; // you wallet simple = wallet on lite-coin network
 String apiKey = "---"; // you api key
@@ -138,11 +138,11 @@ void loop() {
 
   work = work + 1;
 
-  if(work == 100 or work == 200 or work == 300 or work >= 400){
+  if(work == 100 || work == 200 || work == 300 || work >= 400){
     clear_screen();
     home_screen();
     
-    if(take != 0 and take != balance){
+    if(take != 0 && take != balance){
 
       take_screen();
       digitalWrite(LED_BUILTIN, LOW); 

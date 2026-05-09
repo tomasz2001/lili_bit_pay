@@ -14,7 +14,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 extern const unsigned char logo [];
 extern const unsigned char qr_code [];
-extern const char* depression;
+extern char* depression;
 
 extern long balance;
 extern long unconfirmed;
@@ -45,7 +45,7 @@ String formatLTC(long value) {
 }
 
 void depression_check() {
-  if(depression != ""){
+  if(depression != NULL){
       display.fillRect(0, 0, 128, 70, SSD1306_WHITE); // biały pasek
       
       display.setTextColor(SSD1306_BLACK); // czarny tekst

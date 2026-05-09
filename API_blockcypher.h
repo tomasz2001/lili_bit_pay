@@ -1,4 +1,4 @@
-extern const char* depression;
+extern char* depression;
 extern const char* address;
 extern String apiKey;
 extern String network;
