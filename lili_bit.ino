@@ -5,8 +5,8 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
-// take one api usage simple = blockcypher
-#include "API_blockcypher.h"
+// take one api usage simple = Helius Solana RPC
+#include "API_helius.h"
 
 // take one screen usage simple = SSD1306_i2c_128x64 oled
 #include "SCREEN_adafruit_SSD1306_i2c.h"
@@ -16,14 +16,14 @@ const char* password = ""; // you wifi password
 
 const char* depression = "";
 
-const char* address = "ltc1--"; // you wallet simple = wallet on lite-coin network
-String apiKey = "---"; // you api key
-String network = "ltc"; // usage network simple = lite-coin
+const char* address = "---"; // you wallet simple = Solana public address
+String apiKey = "---"; // you Helius api key
+String heliusCluster = "mainnet"; // usage network simple = mainnet or devnet
 
-long balance;
-long unconfirmed;
-long history;
-long take;
+int64_t balance;
+int64_t unconfirmed;
+int64_t history;
+int64_t take;
 
 int work = 100;
 

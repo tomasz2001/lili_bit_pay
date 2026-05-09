@@ -16,19 +16,23 @@ extern const unsigned char logo [];
 extern const unsigned char qr_code [];
 extern const char* depression;
 
-extern long balance;
-extern long unconfirmed;
-extern long history;
-extern long take;
+extern int64_t balance;
+extern int64_t unconfirmed;
+extern int64_t history;
+extern int64_t take;
 
-String formatLTC(long value) {
+String formatSOL(int64_t value) {
+  bool negative = value < 0;
+  if (negative) {
+    value = -value;
+  }
 
-  long whole = value / 100000000;
-  long frac  = value % 100000000;
+  int64_t whole = value / 1000000000LL;
+  int64_t frac  = value % 1000000000LL;
 
 
   String fracStr = String(frac);
-  while (fracStr.length() < 8) {
+  while (fracStr.length() < 9) {
     fracStr = "0" + fracStr;
   }
 
@@ -38,10 +42,11 @@ String formatLTC(long value) {
   }
 
   if (fracStr.length() == 0) {
-    return String(whole);
+    return negative ? String("-") + String(whole) : String(whole);
   }
 
-  return String(whole) + "." + fracStr;
+  String formatted = String(whole) + "." + fracStr;
+  return negative ? String("-") + formatted : formatted;
 }
 
 void depression_check() {
@@ -99,14 +104,14 @@ void bot_screen_api(){
 void home_screen(){
   display.drawBitmap(66, 0, qr_code, 62, 62, SSD1306_WHITE);
   display.setCursor(0, 5);
-  display.println(formatLTC(balance));
+  display.println(formatSOL(balance));
   display.setCursor(0, 15);
   display.println("balance");
 };
 void take_screen(){
   display.setCursor(0, 35);
   display.setTextSize(1);
-  display.println(formatLTC(take));
+  display.println(formatSOL(take));
   display.setCursor(0, 45);
   display.println("take");
   display.setTextSize(1);
