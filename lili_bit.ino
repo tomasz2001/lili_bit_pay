@@ -5,25 +5,19 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
-// take one api usage simple = blockcypher
-#include "API_blockcypher.h"
-
-// take one screen usage simple = SSD1306_i2c_128x64 oled
-#include "SCREEN_adafruit_SSD1306_i2c.h"
-
 const char* ssid = ""; // you wifi network name 
 const char* password = ""; // you wifi password 
 
 const char* depression = "";
 
-const char* address = "ltc1--"; // you wallet simple = wallet on lite-coin network
-String apiKey = "---"; // you api key
-String network = "ltc"; // usage network simple = lite-coin
+const char* address = "---"; // you wallet simple = Solana public address
+String apiKey = "---"; // you Helius api key
+String heliusCluster = "mainnet"; // usage network simple = mainnet or devnet
 
-long balance;
-long unconfirmed;
-long history;
-long take;
+int64_t balance;
+int64_t unconfirmed;
+int64_t history;
+int64_t take;
 
 int work = 100;
 
@@ -96,6 +90,182 @@ const unsigned char logo [] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+String heliusHost() {
+  if (heliusCluster == "devnet") {
+    return "devnet.helius-rpc.com";
+  }
+
+  return "mainnet.helius-rpc.com";
+}
+
+bool getBalances() {
+  String host = heliusHost();
+  String path = "/?api-key=" + apiKey;
+  String body = "{\"jsonrpc\":\"2.0\",\"id\":\"lili-bit-pay\",\"method\":\"getBalance\",\"params\":[\"" + String(address) + "\"]}";
+
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  if (!client.connect(host.c_str(), 443)) {
+    Serial.println("CONNECT FAIL");
+    depression = "E_A0";
+    return false;
+  }
+
+  client.println("POST " + path + " HTTP/1.1");
+  client.println("Host: " + host);
+  client.println("Content-Type: application/json");
+  client.println("Content-Length: " + String(body.length()));
+  client.println("Connection: close");
+  client.println();
+  client.print(body);
+
+  while (client.connected()) {
+    String line = client.readStringUntil('\n');
+    if (line == "\r") break;
+  }
+
+  String json = "";
+  unsigned long t = millis();
+
+  while (millis() - t < 5000) {
+    while (client.available()) {
+      json += (char)client.read();
+      t = millis();
+    }
+  }
+
+  if (json.length() == 0 || json.indexOf("\"error\"") != -1) {
+    Serial.println(json);
+    depression = "E_A0";
+    return false;
+  }
+
+  StaticJsonDocument<768> doc;
+  DeserializationError error = deserializeJson(doc, json);
+
+  if (error || doc["result"]["value"].isNull()) {
+    Serial.println("PARSE FAIL");
+    Serial.println(json);
+    depression = "E_A0";
+    return false;
+  }
+
+  balance = doc["result"]["value"].as<int64_t>();
+  unconfirmed = 0;
+
+  return true;
+}
+
+String formatSOL(int64_t value) {
+  bool negative = value < 0;
+  if (negative) {
+    value = -value;
+  }
+
+  int64_t whole = value / 1000000000LL;
+  int64_t frac  = value % 1000000000LL;
+
+  String fracStr = String(frac);
+  while (fracStr.length() < 9) {
+    fracStr = "0" + fracStr;
+  }
+
+  while (fracStr.endsWith("0")) {
+    fracStr.remove(fracStr.length() - 1);
+  }
+
+  if (fracStr.length() == 0) {
+    return negative ? String("-") + String(whole) : String(whole);
+  }
+
+  String formatted = String(whole) + "." + fracStr;
+  return negative ? String("-") + formatted : formatted;
+}
+
+void depression_check() {
+  if(depression != ""){
+      display.fillRect(0, 0, 128, 70, SSD1306_WHITE); // biały pasek
+
+      display.setTextColor(SSD1306_BLACK); // czarny tekst
+      display.setCursor(5, 5);
+      display.println("THIS TERMINAL HAVE  A DEPRESSION");
+      display.setCursor(5, 25);
+      display.println("PLESSE CHECK README.md by fix this problem");
+      display.setCursor(40, 45);
+      display.setTextSize(2);
+      display.println(depression);
+
+      display.setTextColor(SSD1306_WHITE);
+      display.setTextSize(1);
+      display.display();
+  };
+
+};
+
+void run_screen(){
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    //Serial.println("OLED error");
+    while (true);
+  };
+};
+
+void clear_screen(){
+  display.clearDisplay();
+};
+
+void bot_screen(){
+
+  display.setTextColor(SSD1306_WHITE);
+
+  display.drawBitmap(70, 2, logo, 60, 60, SSD1306_WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(5, 55);
+  display.println("by bas_ic");
+};
+void bot_screen_wifi(){
+  display.setCursor(5, 10);
+  display.println("try WIFI");
+  display.display();
+};
+void bot_screen_api(){
+  display.setCursor(5, 25);
+  display.println("try API");
+  display.display();
+};
+void home_screen(){
+  display.drawBitmap(66, 0, qr_code, 62, 62, SSD1306_WHITE);
+  display.setCursor(0, 5);
+  display.println(formatSOL(balance));
+  display.setCursor(0, 15);
+  display.println("balance");
+};
+void take_screen(){
+  display.setCursor(0, 35);
+  display.setTextSize(1);
+  display.println(formatSOL(take));
+  display.setCursor(0, 45);
+  display.println("take");
+  display.setTextSize(1);
+};
+void update_screen(){
+  display.setCursor(0, 55);
+  display.println("update..");
+  digitalWrite(LED_BUILTIN, LOW);
+};
+void end_screen(){
+  display.display();
+}
 
 
 void setup() {

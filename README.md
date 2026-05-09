@@ -1,7 +1,7 @@
 # lili_bit_pay
 License: AGPLv3
 
-lili_bit_pay is low cost and open-source litecoin pay terminal 
+lili_bit_pay is low cost and open-source Solana pay terminal using Helius
 this project use xiao-esp32-c6 and popular i2c oled 128x64 screan
 ![alt text](https://github.com/tomasz2001/lili_bit_pay/blob/main/logo.png?raw=true "Logo")
 
@@ -12,7 +12,7 @@ Most commercial crypto terminals are overpriced "black boxes." They charge you f
 - Centralized backends that can be shut down at any time.
 - High fees for "processing" payments that should be peer-to-peer.
 
-**Lili Bit-Pay** is a statement. It proves that for $10 and a bit of open-source code, you can have a transparent, independent, and secure LTC monitor. No middlemen, no "redstone" centralized garbage, just pure blockchain.
+**Lili Bit-Pay** is a statement. It proves that for $10 and a bit of open-source code, you can have a transparent, independent, and secure SOL monitor. No middlemen, no "redstone" centralized garbage, just pure blockchain.
 
 ## 🛡️ The Vision: Why Lili Bit-Pay?
 
@@ -30,12 +30,20 @@ The core problem with crypto adoption today is that we traded **practicality for
 3.  **Lili Bit-Pay (The Solution):**
     * **Pros:** Zero nonsense. It is a minimalist terminal that monitors your crypto wallet and alerts you when a payment arrives. 
     * **Privacy:** It doesn't ask for your ID or your political views. 
-    * **Zero Fees:** No middleman takes a cut. Data is fetched from free APIs or your own local node.
+    * **Zero Fees:** No middleman takes a cut. Data is fetched from Helius or your own Solana RPC node.
 
 ### 🗺️ Roadmap & Future Plans:
 * **API Expansion:** Adding more sources for blockchain data to ensure 100% uptime and decentralization.
 * **Sales Records System:** An optional logging module to bring Lili Bit-Pay into the world of "serious business" accounting.
 * **Stablecoin Support:** Implementing support for stablecoins to eliminate price volatility for everyday merchants.
+
+## Solana / Helius Setup
+
+1. Create a Helius API key.
+2. Put your Solana wallet public address in `address` inside `lili_bit.ino`.
+3. Put your Helius API key in `apiKey`.
+4. Set `heliusCluster` to `mainnet` or `devnet`.
+5. Generate a new QR bitmap for your Solana address and replace `qr_code` in `lili_bit.ino`.
 
 ---
 *Built for freedom, simplicity, and true peer-to-peer commerce.*
@@ -59,7 +67,7 @@ The core problem with crypto adoption today is that we traded **practicality for
 
 | **CODE** | **wat hapent** | **how fix shis shit** |
 | :--- | :----- | :------ |
-| **E_A0** | API say [fuck you] for your terminal or you terminal have problem to con this API | check api Key wifi data and network connection |
+| **E_A0** | API say [fuck you] for your terminal or you terminal have problem to con this API | check Helius api key, wallet address, wifi data and network connection |
 
 
 ![alt text](https://github.com/tomasz2001/lili_bit_pay/blob/main/lili_photo.jpeg?raw=true "IMAGE1")
