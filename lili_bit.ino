@@ -8,7 +8,7 @@
 const char* ssid = "aaaaaa"; // your wifi network name
 const char* password = "meshmesh"; // your wifi password
 
-const char* depression = "";
+char* depression = (char*)""; // mutable for error messages
 
 const char* address = "4yGfhamsamXkMLUThdLSbBd48BH8iLUxsZXwoikBDoeM"; // Solana public address
 String apiKey = "d3c9515c-028f-43ac-999a-d75564064c74"; // Helius API key
@@ -78,12 +78,15 @@ bool getBalances() {
   String path = "/?api-key=" + apiKey;
   String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"" + String(address) + "\"]}";
 
+  Serial.println("[API] Connecting to " + host);
+  Serial.println("[API] Request body: " + body);
+
   WiFiClientSecure client;
   client.setInsecure();
 
   if (!client.connect(host.c_str(), 443)) {
-    Serial.println("CONNECT FAIL");
-    depression = "E_A0";
+    Serial.println("[ERROR] CONNECT FAIL");
+    depression = (char*)"E_A0";
     return false;
   }
 
@@ -94,6 +97,8 @@ bool getBalances() {
   client.println("Connection: close");
   client.println();
   client.print(body);
+
+  Serial.println("[API] Sent request");
 
   // skip headers
   while (client.connected()) {
@@ -110,23 +115,46 @@ bool getBalances() {
     }
   }
 
-  if (json.length() == 0 || json.indexOf("\"error\"") != -1) {
-    Serial.println(json);
-    depression = "E_A0";
+  Serial.println("[API] Response: " + json);
+
+  if (json.length() == 0) {
+    Serial.println("[ERROR] Empty response");
+    depression = (char*)"E_A0";
+    return false;
+  }
+
+  if (json.indexOf("\"error\"") != -1) {
+    Serial.println("[ERROR] JSON-RPC error");
+    depression = (char*)"E_A0";
     return false;
   }
 
   StaticJsonDocument<768> doc;
   DeserializationError err = deserializeJson(doc, json);
-  if (err || doc["result"]["value"].isNull()) {
-    Serial.println("PARSE FAIL");
-    Serial.println(json);
-    depression = "E_A0";
+  if (err) {
+    Serial.print("[ERROR] JSON parse error: ");
+    Serial.println(err.c_str());
+    depression = (char*)"E_A0";
     return false;
   }
 
-  balance = doc["result"]["value"].as<int64_t>();
+  if (!doc.containsKey("result")) {
+    Serial.println("[ERROR] No 'result' field");
+    depression = (char*)"E_A0";
+    return false;
+  }
+
+  JsonObject result = doc["result"];
+  if (!result.containsKey("value")) {
+    Serial.println("[ERROR] No 'value' in result");
+    depression = (char*)"E_A0";
+    return false;
+  }
+
+  balance = result["value"].as<int64_t>();
   unconfirmed = 0;
+  Serial.print("[API] SUCCESS - Balance: ");
+  Serial.println(balance);
   return true;
 }
 
@@ -178,11 +206,22 @@ void setup() {
   display.display();
   WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) {
+  int wifi_count = 0;
+  while (WiFi.status() != WL_CONNECTED && wifi_count < 20) {
     delay(500);
-    //Serial.print(".");
+    wifi_count++;
+    Serial.print(".");
   }
-  getBalances();
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println();
+    Serial.println("[WiFi] Connected!");
+    getBalances();
+  } else {
+    Serial.println();
+    Serial.println("[WiFi] Connection failed");
+    depression = (char*)"E_WiFi";
+  }
   display.setCursor(5, 25);
   display.println("try API");
   display.display();
@@ -202,7 +241,7 @@ void loop() {
 
   
 
-  if(work == 100 or work == 200 or work == 300 or work >= 400){
+  if(work == 100 || work == 200 || work == 300 || work >= 400){
     display.clearDisplay();
     
     display.drawBitmap(66, 0, qr_code, 62, 62, SSD1306_WHITE);
@@ -210,7 +249,7 @@ void loop() {
     display.println(formatSOL(balance));
     display.setCursor(0, 15);
     display.println("SOL");
-    if(take != 0 and take != balance){
+    if(take != 0 && take != balance){
       display.setCursor(0, 35);
       display.setTextSize(1);
       display.println(formatSOL(take));
@@ -238,7 +277,7 @@ void loop() {
     display.display();
   }
 
-  if(depression != ""){
+  if(strlen(depression) > 0){
       display.fillRect(0, 0, 128, 70, SSD1306_WHITE); // biały pasek
       
       display.setTextColor(SSD1306_BLACK); // czarny tekst
