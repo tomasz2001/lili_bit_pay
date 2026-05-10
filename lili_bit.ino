@@ -5,13 +5,15 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
-const char* ssid = "aaaaaa"; // your wifi network name
-const char* password = "meshmesh"; // your wifi password
+bool debug = true;
 
-char* depression = (char*)""; // mutable for error messages
+const char* ssid = "aa--"; // your wifi network name
+const char* password = "me--"; // your wifi password
 
-const char* address = "4yGfhamsamXkMLUThdLSbBd48BH8iLUxsZXwoikBDoeM"; // Solana public address
-String apiKey = "d3c9515c-028f-43ac-999a-d75564064c74"; // Helius API key
+const char* depression = "";
+
+const char* address = "4yGf--"; // Solana public address
+String apiKey = "d3c95--"; // Helius API key
 String heliusCluster = "devnet"; // use devnet
 
 int64_t balance = 0;
@@ -78,14 +80,14 @@ bool getBalances() {
   String path = "/?api-key=" + apiKey;
   String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"" + String(address) + "\"]}";
 
-  Serial.println("[API] Connecting to " + host);
-  Serial.println("[API] Request body: " + body);
+  if(debug) Serial.println("[API] Connecting to " + host);
+  if(debug) Serial.println("[API] Request body: " + body);
 
   WiFiClientSecure client;
   client.setInsecure();
 
   if (!client.connect(host.c_str(), 443)) {
-    Serial.println("[ERROR] CONNECT FAIL");
+    if(debug) Serial.println("[ERROR] CONNECT FAIL");
     depression = (char*)"E_A0";
     return false;
   }
@@ -98,13 +100,16 @@ bool getBalances() {
   client.println();
   client.print(body);
 
-  Serial.println("[API] Sent request");
+  if(debug) Serial.println("[API] Sent request");
 
   // skip headers
   while (client.connected()) {
     String line = client.readStringUntil('\n');
     if (line == "\r") break;
   }
+
+  // skip chunk size line (HTTP chunked encoding)
+  client.readStringUntil('\n');
 
   String json = "";
   unsigned long t = millis();
@@ -115,46 +120,70 @@ bool getBalances() {
     }
   }
 
-  Serial.println("[API] Response: " + json);
+  if(debug) Serial.println("[API] Response: " + json);
 
   if (json.length() == 0) {
-    Serial.println("[ERROR] Empty response");
-    depression = (char*)"E_A0";
+    if(debug) Serial.println("[ERROR] Empty response");
+    depression = "E_A0";
     return false;
   }
 
   if (json.indexOf("\"error\"") != -1) {
-    Serial.println("[ERROR] JSON-RPC error");
-    depression = (char*)"E_A0";
+    if(debug) Serial.println("[ERROR] JSON-RPC error in response");
+    depression = "E_A0";
     return false;
   }
 
-  StaticJsonDocument<768> doc;
+  StaticJsonDocument<1024> doc;
   DeserializationError err = deserializeJson(doc, json);
   if (err) {
-    Serial.print("[ERROR] JSON parse error: ");
-    Serial.println(err.c_str());
-    depression = (char*)"E_A0";
+    if(debug) Serial.print("[ERROR] JSON parse error: ");
+    if(debug) Serial.println(err.c_str());
+    depression = "E_A0";
     return false;
   }
 
+  // Parse: {"jsonrpc":"2.0","result":{"context":{...},"value":500000000},"id":1}
   if (!doc.containsKey("result")) {
-    Serial.println("[ERROR] No 'result' field");
-    depression = (char*)"E_A0";
+    if(debug) Serial.println("[ERROR] No 'result' field in response");
+    if(debug) Serial.println("[DEBUG] Available keys:");
+    for (JsonPair kv : doc.as<JsonObject>()) {
+      if(debug) Serial.println(String("  - ") + kv.key().c_str());
+    }
+    depression = "E_A0";
     return false;
   }
 
-  JsonObject result = doc["result"];
-  if (!result.containsKey("value")) {
-    Serial.println("[ERROR] No 'value' in result");
-    depression = (char*)"E_A0";
+  JsonObject result = doc["result"].as<JsonObject>();
+  
+  // Try to find 'value' - could be in result or at top level
+  int64_t val = 0;
+  if (result.containsKey("value")) {
+    val = result["value"].as<int64_t>();
+    if(debug) Serial.print("[DEBUG] Found 'value' in result: ");
+    if(debug) Serial.println(val);
+  } else if (doc.containsKey("value")) {
+    val = doc["value"].as<int64_t>();
+    if(debug) Serial.print("[DEBUG] Found 'value' at top level: ");
+    if(debug) Serial.println(val);
+  } else {
+    if(debug) Serial.println("[ERROR] No 'value' field found in response");
+    if(debug) Serial.println("[DEBUG] Result keys:");
+    for (JsonPair kv : result) {
+      if(debug) Serial.println(String("  - ") + kv.key().c_str());
+    }
+    depression = "E_A0";
     return false;
   }
 
-  balance = result["value"].as<int64_t>();
+  balance = val;
   unconfirmed = 0;
-  Serial.print("[API] SUCCESS - Balance: ");
-  Serial.println(balance);
+  depression = ""; // clear error on success
+  if(debug) Serial.print("[API] SUCCESS - Balance: ");
+  if(debug) Serial.print(balance);
+  if(debug) Serial.print(" lamports = ");
+  if(debug) Serial.print(formatSOL(balance));
+  if(debug) Serial.println(" SOL");
   return true;
 }
 
@@ -210,17 +239,17 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED && wifi_count < 20) {
     delay(500);
     wifi_count++;
-    Serial.print(".");
+    if(debug) Serial.print(".");
   }
   
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println();
-    Serial.println("[WiFi] Connected!");
+    if(debug) Serial.println();
+    if(debug) Serial.println("[WiFi] Connected!");
     getBalances();
   } else {
-    Serial.println();
-    Serial.println("[WiFi] Connection failed");
-    depression = (char*)"E_WiFi";
+    if(debug) Serial.println();
+    if(debug) Serial.println("[WiFi] Connection failed");
+    depression = "E_WiFi";
   }
   display.setCursor(5, 25);
   display.println("try API");
@@ -229,7 +258,7 @@ void setup() {
   //Serial.print("IP: ");
   //Serial.println(WiFi.localIP());
 
-  delay(2000);
+  delay(500);
   display.clearDisplay();
 
 }
@@ -253,6 +282,7 @@ void loop() {
       display.setCursor(0, 35);
       display.setTextSize(1);
       display.println(formatSOL(take));
+      if(debug == false){ Serial.println(formatSOL(take)); };
       display.setCursor(0, 45);
       display.println("take");
       display.setTextSize(1);
@@ -297,4 +327,5 @@ void loop() {
   delay(100);
   
 };
+
 
