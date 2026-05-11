@@ -26,7 +26,37 @@ int work = 100;
 // generator qrcode here https://qrcode.tec-it.com/en
 // generate bitmap for qrcode here https://javl.github.io/image2cpp/ !! TAKE [Invert image colors] !! size bitmap 62x62
 const unsigned char qr_code [] PROGMEM = {
-	0xff, 0xfe
+	0xff, 0xfe, 0x07, 0x33, 0xf0, 0x61, 0xff, 0xfc, 0xff, 0xfe, 0x07, 0x33, 0xf0, 0x61, 0xff, 0xfc, 
+	0xc0, 0x06, 0x67, 0x0c, 0xc0, 0x19, 0x80, 0x0c, 0xc0, 0x06, 0x67, 0x0c, 0xc0, 0x19, 0x80, 0x0c, 
+	0xcf, 0xe6, 0x00, 0x33, 0x33, 0x81, 0x9f, 0xcc, 0xcf, 0xe6, 0x00, 0x33, 0x33, 0x81, 0x9f, 0xcc, 
+	0xcf, 0xe6, 0x7f, 0x33, 0xc0, 0x19, 0x9f, 0xcc, 0xcf, 0xe6, 0x7f, 0x33, 0xc0, 0x19, 0x9f, 0xcc, 
+	0xcf, 0xe6, 0x7f, 0x33, 0xc0, 0x19, 0x9f, 0xcc, 0xcf, 0xe6, 0x18, 0x0c, 0xf3, 0x99, 0x9f, 0xcc, 
+	0xcf, 0xe6, 0x18, 0x0c, 0xf3, 0x99, 0x9f, 0xcc, 0xc0, 0x06, 0x78, 0xf3, 0xf0, 0x19, 0x80, 0x0c, 
+	0xc0, 0x06, 0x78, 0xf3, 0xf0, 0x19, 0x80, 0x0c, 0xff, 0xfe, 0x67, 0x33, 0x33, 0x99, 0xff, 0xfc, 
+	0xff, 0xfe, 0x67, 0x33, 0x33, 0x99, 0xff, 0xfc, 0x00, 0x00, 0x1f, 0xc3, 0xc0, 0x18, 0x00, 0x00, 
+	0x00, 0x00, 0x1f, 0xc3, 0xc0, 0x18, 0x00, 0x00, 0xff, 0xe7, 0xf8, 0xc3, 0xcc, 0x06, 0x67, 0x30, 
+	0xff, 0xe7, 0xf8, 0xc3, 0xcc, 0x06, 0x67, 0x30, 0x3f, 0x99, 0x87, 0x30, 0x3f, 0xfe, 0x7f, 0x00, 
+	0x3f, 0x99, 0x87, 0x30, 0x3f, 0xfe, 0x7f, 0x00, 0x00, 0x7e, 0x07, 0x03, 0xfc, 0x19, 0x87, 0x00, 
+	0x00, 0x7e, 0x07, 0x03, 0xfc, 0x19, 0x87, 0x00, 0x00, 0x7e, 0x07, 0x03, 0xfc, 0x19, 0x87, 0x00, 
+	0x0c, 0x79, 0x80, 0x33, 0xc3, 0xe7, 0x9f, 0x00, 0x0c, 0x79, 0x80, 0x33, 0xc3, 0xe7, 0x9f, 0x00, 
+	0xf0, 0x66, 0x7f, 0x33, 0xcc, 0x00, 0x67, 0xf0, 0xf0, 0x66, 0x7f, 0x33, 0xcc, 0x00, 0x67, 0xf0, 
+	0x00, 0x79, 0x98, 0x00, 0x33, 0xf8, 0x18, 0xc0, 0x00, 0x79, 0x98, 0x00, 0x33, 0xf8, 0x18, 0xc0, 
+	0x3c, 0x1e, 0x00, 0xff, 0xc3, 0x9f, 0x87, 0x00, 0x3c, 0x1e, 0x00, 0xff, 0xc3, 0x9f, 0x87, 0x00, 
+	0x0f, 0xf9, 0x80, 0xc0, 0xc0, 0x7f, 0x98, 0x0c, 0x0f, 0xf9, 0x80, 0xc0, 0xc0, 0x7f, 0x98, 0x0c, 
+	0x33, 0x86, 0x7f, 0xcf, 0x3c, 0x00, 0x67, 0xc0, 0x33, 0x86, 0x7f, 0xcf, 0x3c, 0x00, 0x67, 0xc0, 
+	0xf3, 0xe0, 0x18, 0x30, 0x0f, 0x99, 0xf8, 0x30, 0xf3, 0xe0, 0x18, 0x30, 0x0f, 0x99, 0xf8, 0x30, 
+	0xc3, 0xe7, 0xff, 0x0f, 0xc3, 0x86, 0x18, 0xc0, 0xc3, 0xe7, 0xff, 0x0f, 0xc3, 0x86, 0x18, 0xc0, 
+	0xc3, 0xe7, 0xff, 0x0f, 0xc3, 0x86, 0x18, 0xc0, 0xc0, 0x78, 0x78, 0x30, 0x33, 0xe7, 0x87, 0x0c, 
+	0xc0, 0x78, 0x78, 0x30, 0x33, 0xe7, 0x87, 0x0c, 0xc0, 0x06, 0x18, 0x3f, 0xcc, 0x1f, 0xff, 0xf0, 
+	0xc0, 0x06, 0x18, 0x3f, 0xcc, 0x1f, 0xff, 0xf0, 0x00, 0x00, 0x67, 0x03, 0x30, 0x18, 0x1f, 0x0c, 
+	0x00, 0x00, 0x67, 0x03, 0x30, 0x18, 0x1f, 0x0c, 0xff, 0xfe, 0x7f, 0xfc, 0xff, 0xf9, 0x9f, 0x30, 
+	0xff, 0xfe, 0x7f, 0xfc, 0xff, 0xf9, 0x9f, 0x30, 0xc0, 0x06, 0x18, 0xc0, 0x03, 0xf8, 0x1f, 0x30, 
+	0xc0, 0x06, 0x18, 0xc0, 0x03, 0xf8, 0x1f, 0x30, 0xcf, 0xe6, 0x78, 0xf3, 0xfc, 0x1f, 0xf8, 0x0c, 
+	0xcf, 0xe6, 0x78, 0xf3, 0xfc, 0x1f, 0xf8, 0x0c, 0xcf, 0xe6, 0x78, 0x30, 0xf3, 0x80, 0x1f, 0xfc, 
+	0xcf, 0xe6, 0x78, 0x30, 0xf3, 0x80, 0x1f, 0xfc, 0xcf, 0xe6, 0x78, 0x30, 0xf3, 0x80, 0x1f, 0xfc, 
+	0xcf, 0xe6, 0x7f, 0x0c, 0xcf, 0x9e, 0x78, 0xf0, 0xcf, 0xe6, 0x7f, 0x0c, 0xcf, 0x9e, 0x78, 0xf0, 
+	0xc0, 0x06, 0x60, 0x30, 0xc3, 0xf9, 0xe7, 0x30, 0xc0, 0x06, 0x60, 0x30, 0xc3, 0xf9, 0xe7, 0x30, 
+	0xff, 0xfe, 0x60, 0xc3, 0x0c, 0x66, 0x78, 0xc0, 0xff, 0xfe, 0x60, 0xc3, 0x0c, 0x66, 0x78, 0xc0
 };
 
 //logo
@@ -76,115 +106,130 @@ String heliusHost() {
 }
 
 bool getBalances() {
-  String host = heliusHost();
-  String path = "/?api-key=" + apiKey;
-  String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"" + String(address) + "\"]}";
+  // Try up to 4 times with WiFi reconnection between attempts
+  for(int attempt = 0; attempt < 4; attempt++) {
+    ensureWiFiConnected();
+    
+    if(debug) Serial.println("[API] Attempt " + String(attempt + 1) + " of 4");
+    
+    String host = heliusHost();
+    String path = "/?api-key=" + apiKey;
+    String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"" + String(address) + "\"]}";
 
-  if(debug) Serial.println("[API] Connecting to " + host);
-  if(debug) Serial.println("[API] Request body: " + body);
+    if(debug) Serial.println("[API] Connecting to " + host);
+    if(debug) Serial.println("[API] Request body: " + body);
 
-  WiFiClientSecure client;
-  client.setInsecure();
+    WiFiClientSecure client;
+    client.setInsecure();
 
-  if (!client.connect(host.c_str(), 443)) {
-    if(debug) Serial.println("[ERROR] CONNECT FAIL");
-    depression = (char*)"E_A0";
-    return false;
-  }
-
-  client.println("POST " + path + " HTTP/1.1");
-  client.println("Host: " + host);
-  client.println("Content-Type: application/json");
-  client.println("Content-Length: " + String(body.length()));
-  client.println("Connection: close");
-  client.println();
-  client.print(body);
-
-  if(debug) Serial.println("[API] Sent request");
-
-  // skip headers
-  while (client.connected()) {
-    String line = client.readStringUntil('\n');
-    if (line == "\r") break;
-  }
-
-  // skip chunk size line (HTTP chunked encoding)
-  client.readStringUntil('\n');
-
-  String json = "";
-  unsigned long t = millis();
-  while (millis() - t < 5000) {
-    while (client.available()) {
-      json += (char)client.read();
-      t = millis();
+    if (!client.connect(host.c_str(), 443)) {
+      if(debug) Serial.println("[ERROR] CONNECT FAIL on attempt " + String(attempt + 1));
+      if(attempt < 3) continue; // retry next attempt
+      depression = (char*)"E_A0";
+      return false;
     }
-  }
 
-  if(debug) Serial.println("[API] Response: " + json);
+    client.println("POST " + path + " HTTP/1.1");
+    client.println("Host: " + host);
+    client.println("Content-Type: application/json");
+    client.println("Content-Length: " + String(body.length()));
+    client.println("Connection: close");
+    client.println();
+    client.print(body);
 
-  if (json.length() == 0) {
-    if(debug) Serial.println("[ERROR] Empty response");
-    depression = "E_A0";
-    return false;
-  }
+    if(debug) Serial.println("[API] Sent request");
 
-  if (json.indexOf("\"error\"") != -1) {
-    if(debug) Serial.println("[ERROR] JSON-RPC error in response");
-    depression = "E_A0";
-    return false;
-  }
-
-  StaticJsonDocument<1024> doc;
-  DeserializationError err = deserializeJson(doc, json);
-  if (err) {
-    if(debug) Serial.print("[ERROR] JSON parse error: ");
-    if(debug) Serial.println(err.c_str());
-    depression = "E_A0";
-    return false;
-  }
-
-  // Parse: {"jsonrpc":"2.0","result":{"context":{...},"value":500000000},"id":1}
-  if (!doc.containsKey("result")) {
-    if(debug) Serial.println("[ERROR] No 'result' field in response");
-    if(debug) Serial.println("[DEBUG] Available keys:");
-    for (JsonPair kv : doc.as<JsonObject>()) {
-      if(debug) Serial.println(String("  - ") + kv.key().c_str());
+    // skip headers
+    while (client.connected()) {
+      String line = client.readStringUntil('\n');
+      if (line == "\r") break;
     }
-    depression = "E_A0";
-    return false;
-  }
 
-  JsonObject result = doc["result"].as<JsonObject>();
+    // skip chunk size line (HTTP chunked encoding)
+    client.readStringUntil('\n');
+
+    String json = "";
+    unsigned long t = millis();
+    while (millis() - t < 5000) {
+      while (client.available()) {
+        json += (char)client.read();
+        t = millis();
+      }
+    }
+
+    if(debug) Serial.println("[API] Response: " + json);
+
+    if (json.length() == 0) {
+      if(debug) Serial.println("[ERROR] Empty response on attempt " + String(attempt + 1));
+      if(attempt < 3) continue;
+      depression = "E_A0";
+      return false;
+    }
+
+    if (json.indexOf("\"error\"") != -1) {
+      if(debug) Serial.println("[ERROR] JSON-RPC error in response on attempt " + String(attempt + 1));
+      if(attempt < 3) continue;
+      depression = "E_A0";
+      return false;
+    }
+
+    StaticJsonDocument<1024> doc;
+    DeserializationError err = deserializeJson(doc, json);
+    if (err) {
+      if(debug) Serial.print("[ERROR] JSON parse error on attempt " + String(attempt + 1) + ": ");
+      if(debug) Serial.println(err.c_str());
+      if(attempt < 3) continue;
+      depression = "E_A0";
+      return false;
+    }
+
+    // Parse: {"jsonrpc":"2.0","result":{"context":{...},"value":500000000},"id":1}
+    if (!doc.containsKey("result")) {
+      if(debug) Serial.println("[ERROR] No 'result' field on attempt " + String(attempt + 1));
+      if(debug) Serial.println("[DEBUG] Available keys:");
+      for (JsonPair kv : doc.as<JsonObject>()) {
+        if(debug) Serial.println(String("  - ") + kv.key().c_str());
+      }
+      if(attempt < 3) continue;
+      depression = "E_A0";
+      return false;
+    }
+
+    JsonObject result = doc["result"].as<JsonObject>();
+    
+    // Try to find 'value' - could be in result or at top level
+    int64_t val = 0;
+    if (result.containsKey("value")) {
+      val = result["value"].as<int64_t>();
+      if(debug) Serial.print("[DEBUG] Found 'value' in result: ");
+      if(debug) Serial.println(val);
+    } else if (doc.containsKey("value")) {
+      val = doc["value"].as<int64_t>();
+      if(debug) Serial.print("[DEBUG] Found 'value' at top level: ");
+      if(debug) Serial.println(val);
+    } else {
+      if(debug) Serial.println("[ERROR] No 'value' field on attempt " + String(attempt + 1));
+      if(debug) Serial.println("[DEBUG] Result keys:");
+      for (JsonPair kv : result) {
+        if(debug) Serial.println(String("  - ") + kv.key().c_str());
+      }
+      if(attempt < 3) continue;
+      depression = "E_A0";
+      return false;
+    }
+
+    balance = val;
+    unconfirmed = 0;
+    depression = ""; // clear error on success
+    if(debug) Serial.print("[API] SUCCESS on attempt " + String(attempt + 1) + " - Balance: ");
+    if(debug) Serial.print(balance);
+    if(debug) Serial.print(" lamports = ");
+    if(debug) Serial.print(formatSOL(balance));
+    if(debug) Serial.println(" SOL");
+    return true;
+  }
   
-  // Try to find 'value' - could be in result or at top level
-  int64_t val = 0;
-  if (result.containsKey("value")) {
-    val = result["value"].as<int64_t>();
-    if(debug) Serial.print("[DEBUG] Found 'value' in result: ");
-    if(debug) Serial.println(val);
-  } else if (doc.containsKey("value")) {
-    val = doc["value"].as<int64_t>();
-    if(debug) Serial.print("[DEBUG] Found 'value' at top level: ");
-    if(debug) Serial.println(val);
-  } else {
-    if(debug) Serial.println("[ERROR] No 'value' field found in response");
-    if(debug) Serial.println("[DEBUG] Result keys:");
-    for (JsonPair kv : result) {
-      if(debug) Serial.println(String("  - ") + kv.key().c_str());
-    }
-    depression = "E_A0";
-    return false;
-  }
-
-  balance = val;
-  unconfirmed = 0;
-  depression = ""; // clear error on success
-  if(debug) Serial.print("[API] SUCCESS - Balance: ");
-  if(debug) Serial.print(balance);
-  if(debug) Serial.print(" lamports = ");
-  if(debug) Serial.print(formatSOL(balance));
-  if(debug) Serial.println(" SOL");
-  return true;
+  return false;
 }
 
 // removed LTC helper; using formatSOL for Solana (lamports -> SOL)
@@ -223,12 +268,12 @@ void setup() {
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
 
-  display.drawBitmap(70, 2, logo, 60, 60, SSD1306_WHITE);
+  display.drawBitmap(70, 0, logo, 60, 60, SSD1306_WHITE);
 
 
   display.setTextSize(1);
   display.setCursor(5, 55);
-  display.println("by bas_ic");
+  display.println("by bas_ic for solana");
 
   display.setCursor(5, 10);
   display.println("try WIFI");
@@ -262,8 +307,30 @@ void setup() {
   display.clearDisplay();
 
 }
-
+void ensureWiFiConnected() {
+  while (WiFi.status() != WL_CONNECTED) {
+    if(debug) Serial.println("[WiFi] Disconnected - reconnecting...");
+    WiFi.begin(ssid, password);
+    
+    int retry = 0;
+    while (WiFi.status() != WL_CONNECTED && retry < 20) {
+      delay(500);
+      retry++;
+      if(debug) Serial.print(".");
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+      if(debug) Serial.println();
+      if(debug) Serial.println("[WiFi] Reconnected!");
+      break;
+    } else {
+      if(debug) Serial.println();
+      if(debug) Serial.println("[WiFi] Reconnection failed, retrying...");
+    }
+  }
+}
 void loop() {
+  ensureWiFiConnected();
   digitalWrite(LED_BUILTIN, HIGH); 
 
   work = work + 1;
@@ -282,7 +349,7 @@ void loop() {
       display.setCursor(0, 35);
       display.setTextSize(1);
       display.println(formatSOL(take));
-      if(debug == false){ Serial.println(formatSOL(take)); };
+      
       display.setCursor(0, 45);
       display.println("take");
       display.setTextSize(1);
@@ -290,11 +357,11 @@ void loop() {
     }
 
       if(work >= 400){
-      
       getBalances();
       if(balance != history){
         take = balance - history;
         history = balance;
+        if(debug == false and take != balance){ Serial.println(formatSOL(take)); };
       }
 
       work = 0;
@@ -327,5 +394,3 @@ void loop() {
   delay(100);
   
 };
-
-
