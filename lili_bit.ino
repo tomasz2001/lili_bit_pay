@@ -232,6 +232,8 @@ std::string full =
     "https://ygibg-kiaaa-aaaai-ap7yq-cai.icp0.io/";
 full += "ckusdt_format";
 
+  int64_t whole = value / scale;
+  int64_t frac = value % scale;
 
     if (https.begin(client, full.c_str())){
 
@@ -497,3 +499,4 @@ void loop() {
   yield();
   delay(1000);
 };
+
