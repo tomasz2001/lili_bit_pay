@@ -1,65 +1,32 @@
-#include <Wire.h>
+#include <Adafruit_SSD1327.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 #include <WiFiClientSecure.h>
-#include <ArduinoJson.h>
+#include <QRCodeGFX.h>
+#include <SPI.h>
+#include <stdlib.h>
+
 
 bool debug = true;
+bool qwery_history = true;
+const char* drone_canister = "https://ygibg-kiaaa-aaaai-ap7yq-cai.icp0.io/";
 
 const char* ssid = "aa--"; // your wifi network name
 const char* password = "me--"; // your wifi password
 
 const char* depression = "";
-
-const char* address = "4yGf--"; // Solana public address
-String apiKey = "d3c95--"; // Helius API key
-String heliusCluster = "devnet"; // use devnet
-
+const char* spiner = "";
+String coin = "";
+String addres = "aaaaa";
+int64_t format = 0;
 int64_t balance = 0;
 int64_t unconfirmed = 0;
 int64_t history = 0;
 int64_t take = 0;
 int work = 100;
 
-// you walllet qrcode bitmap
-// generator qrcode here https://qrcode.tec-it.com/en
-// generate bitmap for qrcode here https://javl.github.io/image2cpp/ !! TAKE [Invert image colors] !! size bitmap 62x62
-const unsigned char qr_code [] PROGMEM = {
-	0xff, 0xfe, 0x07, 0x33, 0xf0, 0x61, 0xff, 0xfc, 0xff, 0xfe, 0x07, 0x33, 0xf0, 0x61, 0xff, 0xfc, 
-	0xc0, 0x06, 0x67, 0x0c, 0xc0, 0x19, 0x80, 0x0c, 0xc0, 0x06, 0x67, 0x0c, 0xc0, 0x19, 0x80, 0x0c, 
-	0xcf, 0xe6, 0x00, 0x33, 0x33, 0x81, 0x9f, 0xcc, 0xcf, 0xe6, 0x00, 0x33, 0x33, 0x81, 0x9f, 0xcc, 
-	0xcf, 0xe6, 0x7f, 0x33, 0xc0, 0x19, 0x9f, 0xcc, 0xcf, 0xe6, 0x7f, 0x33, 0xc0, 0x19, 0x9f, 0xcc, 
-	0xcf, 0xe6, 0x7f, 0x33, 0xc0, 0x19, 0x9f, 0xcc, 0xcf, 0xe6, 0x18, 0x0c, 0xf3, 0x99, 0x9f, 0xcc, 
-	0xcf, 0xe6, 0x18, 0x0c, 0xf3, 0x99, 0x9f, 0xcc, 0xc0, 0x06, 0x78, 0xf3, 0xf0, 0x19, 0x80, 0x0c, 
-	0xc0, 0x06, 0x78, 0xf3, 0xf0, 0x19, 0x80, 0x0c, 0xff, 0xfe, 0x67, 0x33, 0x33, 0x99, 0xff, 0xfc, 
-	0xff, 0xfe, 0x67, 0x33, 0x33, 0x99, 0xff, 0xfc, 0x00, 0x00, 0x1f, 0xc3, 0xc0, 0x18, 0x00, 0x00, 
-	0x00, 0x00, 0x1f, 0xc3, 0xc0, 0x18, 0x00, 0x00, 0xff, 0xe7, 0xf8, 0xc3, 0xcc, 0x06, 0x67, 0x30, 
-	0xff, 0xe7, 0xf8, 0xc3, 0xcc, 0x06, 0x67, 0x30, 0x3f, 0x99, 0x87, 0x30, 0x3f, 0xfe, 0x7f, 0x00, 
-	0x3f, 0x99, 0x87, 0x30, 0x3f, 0xfe, 0x7f, 0x00, 0x00, 0x7e, 0x07, 0x03, 0xfc, 0x19, 0x87, 0x00, 
-	0x00, 0x7e, 0x07, 0x03, 0xfc, 0x19, 0x87, 0x00, 0x00, 0x7e, 0x07, 0x03, 0xfc, 0x19, 0x87, 0x00, 
-	0x0c, 0x79, 0x80, 0x33, 0xc3, 0xe7, 0x9f, 0x00, 0x0c, 0x79, 0x80, 0x33, 0xc3, 0xe7, 0x9f, 0x00, 
-	0xf0, 0x66, 0x7f, 0x33, 0xcc, 0x00, 0x67, 0xf0, 0xf0, 0x66, 0x7f, 0x33, 0xcc, 0x00, 0x67, 0xf0, 
-	0x00, 0x79, 0x98, 0x00, 0x33, 0xf8, 0x18, 0xc0, 0x00, 0x79, 0x98, 0x00, 0x33, 0xf8, 0x18, 0xc0, 
-	0x3c, 0x1e, 0x00, 0xff, 0xc3, 0x9f, 0x87, 0x00, 0x3c, 0x1e, 0x00, 0xff, 0xc3, 0x9f, 0x87, 0x00, 
-	0x0f, 0xf9, 0x80, 0xc0, 0xc0, 0x7f, 0x98, 0x0c, 0x0f, 0xf9, 0x80, 0xc0, 0xc0, 0x7f, 0x98, 0x0c, 
-	0x33, 0x86, 0x7f, 0xcf, 0x3c, 0x00, 0x67, 0xc0, 0x33, 0x86, 0x7f, 0xcf, 0x3c, 0x00, 0x67, 0xc0, 
-	0xf3, 0xe0, 0x18, 0x30, 0x0f, 0x99, 0xf8, 0x30, 0xf3, 0xe0, 0x18, 0x30, 0x0f, 0x99, 0xf8, 0x30, 
-	0xc3, 0xe7, 0xff, 0x0f, 0xc3, 0x86, 0x18, 0xc0, 0xc3, 0xe7, 0xff, 0x0f, 0xc3, 0x86, 0x18, 0xc0, 
-	0xc3, 0xe7, 0xff, 0x0f, 0xc3, 0x86, 0x18, 0xc0, 0xc0, 0x78, 0x78, 0x30, 0x33, 0xe7, 0x87, 0x0c, 
-	0xc0, 0x78, 0x78, 0x30, 0x33, 0xe7, 0x87, 0x0c, 0xc0, 0x06, 0x18, 0x3f, 0xcc, 0x1f, 0xff, 0xf0, 
-	0xc0, 0x06, 0x18, 0x3f, 0xcc, 0x1f, 0xff, 0xf0, 0x00, 0x00, 0x67, 0x03, 0x30, 0x18, 0x1f, 0x0c, 
-	0x00, 0x00, 0x67, 0x03, 0x30, 0x18, 0x1f, 0x0c, 0xff, 0xfe, 0x7f, 0xfc, 0xff, 0xf9, 0x9f, 0x30, 
-	0xff, 0xfe, 0x7f, 0xfc, 0xff, 0xf9, 0x9f, 0x30, 0xc0, 0x06, 0x18, 0xc0, 0x03, 0xf8, 0x1f, 0x30, 
-	0xc0, 0x06, 0x18, 0xc0, 0x03, 0xf8, 0x1f, 0x30, 0xcf, 0xe6, 0x78, 0xf3, 0xfc, 0x1f, 0xf8, 0x0c, 
-	0xcf, 0xe6, 0x78, 0xf3, 0xfc, 0x1f, 0xf8, 0x0c, 0xcf, 0xe6, 0x78, 0x30, 0xf3, 0x80, 0x1f, 0xfc, 
-	0xcf, 0xe6, 0x78, 0x30, 0xf3, 0x80, 0x1f, 0xfc, 0xcf, 0xe6, 0x78, 0x30, 0xf3, 0x80, 0x1f, 0xfc, 
-	0xcf, 0xe6, 0x7f, 0x0c, 0xcf, 0x9e, 0x78, 0xf0, 0xcf, 0xe6, 0x7f, 0x0c, 0xcf, 0x9e, 0x78, 0xf0, 
-	0xc0, 0x06, 0x60, 0x30, 0xc3, 0xf9, 0xe7, 0x30, 0xc0, 0x06, 0x60, 0x30, 0xc3, 0xf9, 0xe7, 0x30, 
-	0xff, 0xfe, 0x60, 0xc3, 0x0c, 0x66, 0x78, 0xc0, 0xff, 0xfe, 0x60, 0xc3, 0x0c, 0x66, 0x78, 0xc0
-};
-
-//logo
+// logo
 const unsigned char logo [] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -92,220 +59,263 @@ const unsigned char logo [] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
+const char* rootCACertificate = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIIE9DCCBHqgAwIBAgISBSdzm7V6bHRuZEccCRgB4HnjMAoGCCqGSM49BAMDMDMx
+CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNZ
+RTIwHhcNMjYwODI4MDgxODA5WhcNMjYxMTI2MDgxODA4WjASMRAwDgYDVQQDEwdp
+YzAuYXBwMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEpSze0fexttMcV5G9xpq2iBgP
+C9sVg2dQguOpNXEVvhXGwJqWNE9guPB990tNhiMa5mzkskq5QYjpOipCUA/oCVhG
+MzO7jfb24njGIShe4l5rOLaiNHrRz+TSTjZ2mngho4IDcDCCA2wwDgYDVR0PAQH/
+BAQDAgeAMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwHQYDVR0O
+BBYEFKKgKto6DQH6IrvDbuTH9zPHbRaRMB8GA1UdIwQYMBaAFLlZ8o7PIvCG0zdI
+/3YUGLqC2FWHMDMGCCsGAQUFBwEBBCcwJTAjBggrBgEFBQcwAoYXaHR0cDovL3ll
+Mi5pLmxlbmNyLm9yZy8wggFpBgNVHREEggFgMIIBXIIPKi5jYWZmZWluZS5zaXRl
+ghIqLmNhZmZlaW5lLndlYnNpdGWCDiouY2FmZmVpbmUueHl6ghIqLmRldi5jYWZm
+ZWluZS54eXqCCSouaWMwLmFwcIIJKi5pY3AubmV0ggkqLmljcDAuaW+CCSouaWNw
+MS5pb4IWKi5pbnRlcm5ldGNvbXB1dGVyLm9yZ4IaKi5wcm9kLXN0cmVzcy5jYWZm
+ZWluZS54eXqCFioucmF3LmNhZmZlaW5lLndlYnNpdGWCDSoucmF3LmljMC5hcHCC
+DSoucmF3LmljcC5uZXSCDSoucmF3LmljcDAuaW+CDSoucmF3LmljcDEuaW+CDWNh
+ZmZlaW5lLnNpdGWCEGNhZmZlaW5lLndlYnNpdGWCDGNhZmZlaW5lLnh5eoIHaWMw
+LmFwcIIKaWNwLWFwaS5pb4IHaWNwLm5ldIIHaWNwMC5pb4IHaWNwMS5pbzATBgNV
+HSAEDDAKMAgGBmeBDAECATAvBgNVHR8EKDAmMCSgIqAghh5odHRwOi8veWUyLmMu
+bGVuY3Iub3JnLzEwMC5jcmwwggENBgorBgEEAdZ5AgQCBIH+BIH7APkAdwCUTkOH
++uzB74HzGSQmqBhlAcfTXzgCAT9yZ31VNy4Z2AAAAaBHqC4mAAAEAwBIMEYCIQDS
+NZG9NlXuXVuXrtH0bo7qt/mgM2iF0Oxx/3BBiIqeagIhAObrKJ/+Jx1K2WuO24bO
+0nFyZhlmLcSuMVdtmr4aUH1sAH4AJuNkblhpISO8ND9HJDWbN5LNJFqI2BXTkzP9
+mRirRyMAAAGgR6gnXwAIAAAFADoN6BYEAwBHMEUCIQD73eQHhqNAbfruHpYYSKEc
+cB00l0sW9qx4VC8YU74NxAIgZRcGH9nk25N82yJX0CjdHgUmFf/m1O/q/g84Do7C
+xkEwCgYIKoZIzj0EAwMDaAAwZQIwOMc/yPyxVya4ZIUPUFV6ywzEmnf1GE99tf3F
+CDwfdKeuYMl25FEQySAbxF8UF5HpAjEAuGUCCuzzrMVFSxRXKsYyMcfbZXyG2yZJ
+NLB+msU1sgPHLeALewYPOXec3gI12MOM
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIICjDCCAhGgAwIBAgIQTfOxXdbAeExQfNN7WObxFTAKBggqhkjOPQQDAzAuMQsw
+CQYDVQQGEwJVUzENMAsGA1UEChMESVNSRzEQMA4GA1UEAxMHUm9vdCBZRTAeFw0y
+NTA5MDMwMDAwMDBaFw0yODA5MDIyMzU5NTlaMDMxCzAJBgNVBAYTAlVTMRYwFAYD
+VQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNZRTIwdjAQBgcqhkjOPQIBBgUr
+gQQAIgNiAARxmrQzkdbEEL3MqXt3dJQttYc47axkdDTHud5TPqM2z5uSD5cmk0Wr
+HlWXvnlvqBLqiB34kluxIbmMyAiq3/YD6e80/vV259K8XQIdjFXloYOa0mIU71f7
+HQ09PvYDlw+jge4wgeswDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUF
+BwMBMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFLlZ8o7PIvCG0zdI/3YU
+GLqC2FWHMB8GA1UdIwQYMBaAFKPIJlqOoUzQNWP8myPIOq5W809WMDIGCCsGAQUF
+BwEBBCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3llLmkubGVuY3Iub3JnLzATBgNV
+HSAEDDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veWUuYy5s
+ZW5jci5vcmcvMAoGCCqGSM49BAMDA2kAMGYCMQDIcnw5dcZLN9ffynXnnkLD/itS
+JEycJPb3sRkzeqBowup7vOsAwaqoCnNn/jh9wycCMQCJM6CPlaOC4pQYYbJtVPYb
+DKrIb2EKk5NpOpE6/XttQYZV/3gilB9l+Cc/DOVwmyg=
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIICpjCCAiugAwIBAgIRAIchZfw0tuX7qK3Vs3BftTowCgYIKoZIzj0EAwMwTzEL
+MAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2VhcmNo
+IEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDIwHhcNMjYwNTEzMDAwMDAwWhcN
+MzIwOTAyMjM1OTU5WjAuMQswCQYDVQQGEwJVUzENMAsGA1UEChMESVNSRzEQMA4G
+A1UEAxMHUm9vdCBZRTB2MBAGByqGSM49AgEGBSuBBAAiA2IABDwS/6vhrcVqcbBo
++wgdI3fwn9x7DNJJOY/lTOti0vkwuRN87RhEhTH17E7XyFjWsPYhIPt/wzOqxTd2
+b+4ZJNy9ID04YywF9U5zasDVyGSNErVNtz8uSGh5izW87j77GaOB6zCB6DAOBgNV
+HQ8BAf8EBAMCAQYwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDwYDVR0TAQH/BAUwAwEB
+/zAdBgNVHQ4EFgQUo8gmWo6hTNA1Y/ybI8g6rlbzT1YwHwYDVR0jBBgwFoAUfEKW
+rt5LSDv6kviejM9ti6lyN5UwMgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUFBzAChhZo
+dHRwOi8veDIuaS5sZW5jci5vcmcvMBMGA1UdIAQMMAowCAYGZ4EMAQIBMCcGA1Ud
+HwQgMB4wHKAaoBiGFmh0dHA6Ly94Mi5jLmxlbmNyLm9yZy8wCgYIKoZIzj0EAwMD
+aQAwZgIxAMU19WCtmxVND8UHBZRoma49Z7jPs64Dma0eTu1OChVbB/2J7GV3nvYK
+Ax54uk1G9QIxAO0miLVJu8PLNiXXXkiE/gsK3CTRTF/aeo4bMX42Zw40csRU6AC2
+6hSW1/IWaas6dg==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIICGzCCAaGgAwIBAgIQQdKd0XLq7qeAwSxs6S+HUjAKBggqhkjOPQQDAzBPMQsw
+CQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFyY2gg
+R3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMjAeFw0yMDA5MDQwMDAwMDBaFw00
+MDA5MTcxNjAwMDBaME8xCzAJBgNVBAYTAlVTMSkwJwYDVQQKEyBJbnRlcm5ldCBT
+ZWN1cml0eSBSZXNlYXJjaCBHcm91cDEVMBMGA1UEAxMMSVNSRyBSb290IFgyMHYw
+EAYHKoZIzj0CAQYFK4EEACIDYgAEzZvVn4CDCuwJSvMWSj5cz3es3mcFDR0HttwW
++1qLFNvicWDEukWVEYmO6gbf9yoWHKS5xcUy4APgHoIYOIvXRdgKam7mAHf7AlF9
+ItgKbppbd9/w+kHsOdx1ymgHDB/qo0IwQDAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0T
+AQH/BAUwAwEB/zAdBgNVHQ4EFgQUfEKWrt5LSDv6kviejM9ti6lyN5UwCgYIKoZI
+zj0EAwMDaAAwZQIwe3lORlCEwkSHRhtFcP9Ymd70/aTSVaYgLXTWNLxBo1BfASdW
+tL4ndQavEi51mI38AjEAi/V3bNTIZargCyzuFJ0nN6T5U6VR5CmD1/iQMVtCnwr1
+/q4AaOeMSQ+2b1tbFfLn
+-----END CERTIFICATE-----
+)EOF";
+
 #define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+#define SCREEN_HEIGHT 96
 
-#define OLED_RESET -1
-#define SCREEN_ADDRESS 0x3C
+// SPI Pins
+#define OLED_CLK  D8    // D8
+#define OLED_MOSI D10   // D10
+#define OLED_CS   D2    // D2
+#define OLED_DC   D3    // D3
+#define OLED_RESET D1   // D1
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+// Software SPI - 128x96
+Adafruit_SSD1327 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+QRCodeGFX qrcode(display);
 
-String heliusHost() {
-  if (heliusCluster == "devnet") return "devnet.helius-rpc.com";
-  return "mainnet.helius-rpc.com";
-}
-
-bool getBalances() {
-  // Try up to 4 times with WiFi reconnection between attempts
-  for(int attempt = 0; attempt < 4; attempt++) {
-    ensureWiFiConnected();
-    
-    if(debug) Serial.println("[API] Attempt " + String(attempt + 1) + " of 4");
-    
-    String host = heliusHost();
-    String path = "/?api-key=" + apiKey;
-    String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"" + String(address) + "\"]}";
-
-    if(debug) Serial.println("[API] Connecting to " + host);
-    if(debug) Serial.println("[API] Request body: " + body);
+bool getAddres() {     
+while (addres == "") {
+  if (WiFi.status() == WL_CONNECTED) {
 
     WiFiClientSecure client;
-    client.setInsecure();
+    client.setCACert(rootCACertificate);
 
-    if (!client.connect(host.c_str(), 443)) {
-      if(debug) Serial.println("[ERROR] CONNECT FAIL on attempt " + String(attempt + 1));
-      if(attempt < 3) continue; // retry next attempt
-      depression = (char*)"E_A0";
-      return false;
-    }
+    HTTPClient https;
 
-    client.println("POST " + path + " HTTP/1.1");
-    client.println("Host: " + host);
-    client.println("Content-Type: application/json");
-    client.println("Content-Length: " + String(body.length()));
-    client.println("Connection: close");
-    client.println();
-    client.print(body);
+    std::string full = "https://ygibg-kiaaa-aaaai-ap7yq-cai.icp0.io/";
+    full += "addres";
 
-    if(debug) Serial.println("[API] Sent request");
+    if (https.begin(client, full.c_str())) {
+      int httpCode = https.GET();
 
-    // skip headers
-    while (client.connected()) {
-      String line = client.readStringUntil('\n');
-      if (line == "\r") break;
-    }
+      if (httpCode == HTTP_CODE_OK) {
+        String response = https.getString();
+        response.trim();
+        addres = response;
 
-    // skip chunk size line (HTTP chunked encoding)
-    client.readStringUntil('\n');
-
-    String json = "";
-    unsigned long t = millis();
-    while (millis() - t < 5000) {
-      while (client.available()) {
-        json += (char)client.read();
-        t = millis();
+        if (debug) Serial.println(addres);
       }
+
+      https.end();
     }
+  }
 
-    if(debug) Serial.println("[API] Response: " + json);
-
-    if (json.length() == 0) {
-      if(debug) Serial.println("[ERROR] Empty response on attempt " + String(attempt + 1));
-      if(attempt < 3) continue;
-      depression = "E_A0";
-      return false;
-    }
-
-    if (json.indexOf("\"error\"") != -1) {
-      if(debug) Serial.println("[ERROR] JSON-RPC error in response on attempt " + String(attempt + 1));
-      if(attempt < 3) continue;
-      depression = "E_A0";
-      return false;
-    }
-
-    StaticJsonDocument<1024> doc;
-    DeserializationError err = deserializeJson(doc, json);
-    if (err) {
-      if(debug) Serial.print("[ERROR] JSON parse error on attempt " + String(attempt + 1) + ": ");
-      if(debug) Serial.println(err.c_str());
-      if(attempt < 3) continue;
-      depression = "E_A0";
-      return false;
-    }
-
-    // Parse: {"jsonrpc":"2.0","result":{"context":{...},"value":500000000},"id":1}
-    if (!doc.containsKey("result")) {
-      if(debug) Serial.println("[ERROR] No 'result' field on attempt " + String(attempt + 1));
-      if(debug) Serial.println("[DEBUG] Available keys:");
-      for (JsonPair kv : doc.as<JsonObject>()) {
-        if(debug) Serial.println(String("  - ") + kv.key().c_str());
-      }
-      if(attempt < 3) continue;
-      depression = "E_A0";
-      return false;
-    }
-
-    JsonObject result = doc["result"].as<JsonObject>();
+  if (addres == "") {
+    delay(10000);  // Odczekaj 1 sekundę przed kolejną próbą
+  
+  }
+}
+}
+bool getBalance() {
     
-    // Try to find 'value' - could be in result or at top level
-    int64_t val = 0;
-    if (result.containsKey("value")) {
-      val = result["value"].as<int64_t>();
-      if(debug) Serial.print("[DEBUG] Found 'value' in result: ");
-      if(debug) Serial.println(val);
-    } else if (doc.containsKey("value")) {
-      val = doc["value"].as<int64_t>();
-      if(debug) Serial.print("[DEBUG] Found 'value' at top level: ");
-      if(debug) Serial.println(val);
-    } else {
-      if(debug) Serial.println("[ERROR] No 'value' field on attempt " + String(attempt + 1));
-      if(debug) Serial.println("[DEBUG] Result keys:");
-      for (JsonPair kv : result) {
-        if(debug) Serial.println(String("  - ") + kv.key().c_str());
-      }
-      if(attempt < 3) continue;
-      depression = "E_A0";
-      return false;
-    }
+    if (WiFi.status() == WL_CONNECTED) {
 
-    balance = val;
-    unconfirmed = 0;
-    depression = ""; // clear error on success
-    if(debug) Serial.print("[API] SUCCESS on attempt " + String(attempt + 1) + " - Balance: ");
-    if(debug) Serial.print(balance);
-    if(debug) Serial.print(" lamports = ");
-    if(debug) Serial.print(formatSOL(balance));
-    if(debug) Serial.println(" SOL");
+    WiFiClientSecure client;
+    //client.setInsecure();
+    client.setCACert(rootCACertificate);
+    HTTPClient https;
+std::string full =
+    "https://ygibg-kiaaa-aaaai-ap7yq-cai.icp0.io/";
+full += "ckusdt_balance";
+
+
+    if (https.begin(client, full.c_str())){
+
+      int httpCode = https.GET();
+
+      if (httpCode == HTTP_CODE_OK) {
+
+        String response = https.getString();
+        response.trim();
+        balance = response.toInt();
+        Serial.println(balance);
+        if(debug) Serial.println(balance);
+       
+      }
+
+      https.end();
+    };
+    return true;
+  }
+  
+  return false;
+}
+bool getFormat() {
+    
+    if (WiFi.status() == WL_CONNECTED) {
+
+    WiFiClientSecure client;
+    //client.setInsecure();
+    client.setCACert(rootCACertificate);
+    HTTPClient https;
+std::string full =
+    "https://ygibg-kiaaa-aaaai-ap7yq-cai.icp0.io/";
+full += "ckusdt_format";
+
+
+    if (https.begin(client, full.c_str())){
+
+      int httpCode = https.GET();
+
+      if (httpCode == HTTP_CODE_OK) {
+
+        String response = https.getString();
+        response.trim();
+        format = response.toInt();
+        Serial.println(format);
+        if(debug) Serial.println(format);
+       
+      }
+
+      https.end();
+    };
+    return true;
+  }
+  
+  return false;
+}
+bool getCoin() {
+    
+    if (WiFi.status() == WL_CONNECTED) {
+
+    WiFiClientSecure client;
+    //client.setInsecure();
+    client.setCACert(rootCACertificate);
+    HTTPClient https;
+std::string full =
+    "https://ygibg-kiaaa-aaaai-ap7yq-cai.icp0.io/";
+full += "howcoin";
+
+
+    if (https.begin(client, full.c_str())){
+
+      int httpCode = https.GET();
+
+      if (httpCode == HTTP_CODE_OK) {
+
+        String response = https.getString();
+        coin = response;
+        Serial.println(format);
+        if(debug) Serial.println(format);
+       
+      }
+
+      https.end();
+    };
     return true;
   }
   
   return false;
 }
 
-// removed LTC helper; using formatSOL for Solana (lamports -> SOL)
+String formatCoin(int64_t value) {
+  int64_t scale = 1;
+  for (uint8_t i = 0; i < format; i++) {
+    scale *= 10;
+  }
 
+  int64_t whole = value / scale;
+  int64_t frac = value % scale;
 
-String formatSOL(int64_t value) {
-  int64_t whole = value / 1000000000LL;
-  int64_t frac = value % 1000000000LL;
   if (frac < 0) frac = -frac;
 
   String fracStr = String(frac);
-  while (fracStr.length() < 9) fracStr = "0" + fracStr;
-  while (fracStr.endsWith("0")) fracStr.remove(fracStr.length() - 1);
 
-  if (fracStr.length() == 0) return String(whole);
+  // Dopisz zera z lewej strony
+  while (fracStr.length() < format) {
+    fracStr = "0" + fracStr;
+  }
+
+  // Usuń zera na końcu części ułamkowej
+  while (fracStr.length() > 0 && fracStr.endsWith("0")) {
+    fracStr.remove(fracStr.length() - 1);
+  }
+
+  if (fracStr.length() == 0) {
+    return String(whole);
+  }
+
   return String(whole) + "." + fracStr;
-}
-
-// BlockCypher code removed — using Helius JSON-RPC getBalances() above
-void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
-  
-  Serial.begin(115200);
-  Wire.begin();
-
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    //Serial.println("OLED error");
-    while (true);
-  }
-
-  randomSeed(analogRead(0));
-
-
-  display.clearDisplay();
-
-  display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);
-
-  display.drawBitmap(70, 0, logo, 60, 60, SSD1306_WHITE);
-
-
-  display.setTextSize(1);
-  display.setCursor(5, 55);
-  display.println("by bas_ic for solana");
-
-  display.setCursor(5, 10);
-  display.println("try WIFI");
-  display.display();
-  WiFi.begin(ssid, password);
-
-  int wifi_count = 0;
-  while (WiFi.status() != WL_CONNECTED && wifi_count < 20) {
-    delay(500);
-    wifi_count++;
-    if(debug) Serial.print(".");
-  }
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    if(debug) Serial.println();
-    if(debug) Serial.println("[WiFi] Connected!");
-    getBalances();
-  } else {
-    if(debug) Serial.println();
-    if(debug) Serial.println("[WiFi] Connection failed");
-    depression = "E_WiFi";
-  }
-  display.setCursor(5, 25);
-  display.println("try API");
-  display.display();
-
-  //Serial.print("IP: ");
-  //Serial.println(WiFi.localIP());
-
-  delay(500);
-  display.clearDisplay();
-
 }
 void ensureWiFiConnected() {
   while (WiFi.status() != WL_CONNECTED) {
@@ -323,74 +333,167 @@ void ensureWiFiConnected() {
       if(debug) Serial.println();
       if(debug) Serial.println("[WiFi] Reconnected!");
       break;
-    } else {
-      if(debug) Serial.println();
-      if(debug) Serial.println("[WiFi] Reconnection failed, retrying...");
     }
   }
 }
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+
+  if (!display.begin(0x3D)) {
+    while (1) yield();
+  }
+  
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1327_WHITE);
+  display.drawBitmap(70, 5, logo, 60, 60, SSD1327_WHITE);
+  display.setCursor(5, 70);
+  display.println("by bas_ic");
+  display.display();
+  
+  delay(1000);
+  
+  // Configure time with NTP (required for SSL certificate validation)
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  if(debug) Serial.println("[SETUP] Waiting for NTP time synchronization...");
+  time_t now = time(nullptr);
+  int ntp_timeout = 0;
+
+  while (now < 24 * 3600 && ntp_timeout < 20) {
+    delay(500);
+    now = time(nullptr);
+    ntp_timeout++;
+    if(debug) Serial.print(".");
+  }
+  
+  
+  if(debug) Serial.println();
+  if(debug) Serial.println("[SETUP] NTP time: " + String(ctime(&now)));
+  
+  
+
+  int wifi_count = 0;
+  while (WiFi.status() != WL_CONNECTED && wifi_count < 20) {
+    delay(500);
+    wifi_count++;
+    if(debug) Serial.print(".");
+  }
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    if(debug) Serial.println();
+    if(debug) Serial.println("[WiFi] Connected!");
+    getBalance();
+  } else {
+    if(debug) Serial.println();
+    if(debug) Serial.println("[WiFi] Connection failed");
+    depression = "E_WiFi";
+  }
+
+  delay(2500);
+  display.setCursor(5, 5);
+  display.println("netw ready");
+  randomSeed(analogRead(0));
+   display.display();
+  getAddres();
+  while (!getAddres()) {
+    delay(100);
+  }
+  display.setCursor(5, 25);
+  display.println("addr ready");
+   display.display();
+  //getFormat();
+  delay(2500);
+  display.setCursor(5, 35);
+  display.println("form ready");
+   display.display();
+  //getCoin();
+  delay(2500);
+  display.setCursor(5, 45);
+  display.println("coin ready");
+   display.display();
+}
+
 void loop() {
-  ensureWiFiConnected();
   digitalWrite(LED_BUILTIN, HIGH); 
 
   work = work + 1;
 
-  
-
-  if(work == 100 || work == 200 || work == 300 || work >= 400){
+  if(work == 2 || work == 4 || work == 6 || work >= 8){
     display.clearDisplay();
+    display.setTextColor(SSD1327_WHITE);
     
-    display.drawBitmap(66, 0, qr_code, 62, 62, SSD1306_WHITE);
-    display.setCursor(0, 5);
-    display.println(formatSOL(balance));
-    display.setCursor(0, 15);
-    display.println("SOL");
+    display.setTextSize(1);
+    display.setCursor(5, 5);
+    display.println("network");
+    display.setCursor(5, 15);
+    display.println("  ICP");
+    display.setCursor(5, 30);
+    display.println("akcept");
+    display.setCursor(10, 40);
+    display.println(coin);
+
+    qrcode.setScale(2);
+    qrcode.draw(addres.c_str(), 50, -2);
+    
     if(take != 0 && take != balance){
-      display.setCursor(0, 35);
-      display.setTextSize(1);
-      display.println(formatSOL(take));
-      
-      display.setCursor(0, 45);
+      display.setCursor(50, 80);
+      display.setTextSize(2);
+      display.println(formatCoin(take));
+      display.setCursor(0, 80);
       display.println("take");
       display.setTextSize(1);
+      display.setCursor(20, 60);
+      display.println(spiner);
+      display.setCursor(10, 60);
+      display.println(spiner);
+      display.setCursor(0, 60);
+      display.println(spiner);
       digitalWrite(LED_BUILTIN, LOW); 
     }
 
-      if(work >= 400){
-      getBalances();
+    if(work >= 8){
+      getBalance();
       if(balance != history){
         take = balance - history;
         history = balance;
-        if(debug == false and take != balance){ Serial.println(formatSOL(take)); };
-      }
+        if(debug == false and take != balance){ Serial.println(take); };
+          if(spiner == "X"){
+            spiner = "O";
+          }else{
+            spiner = "X";
+          }
 
+      }
       work = 0;
-      display.setCursor(0, 55);
-      display.println("update..");
+      display.setTextSize(1);
+      display.setCursor(5, 67);
+      display.println("update");
       digitalWrite(LED_BUILTIN, LOW); 
-    
     }
     
     display.display();
   }
 
   if(strlen(depression) > 0){
-      display.fillRect(0, 0, 128, 70, SSD1306_WHITE); // biały pasek
-      
-      display.setTextColor(SSD1306_BLACK); // czarny tekst
-      display.setCursor(5, 5);
-      display.println("THIS TERMINAL HAVE  A DEPRESSION");
-      display.setCursor(5, 25);
-      display.println("PLESSE CHECK README.md by fix this problem");
-      display.setCursor(40, 45);
-      display.setTextSize(2);
-      display.println(depression);
-
-      display.setTextColor(SSD1306_WHITE);
+      display.clearDisplay();
+      display.fillRect(0, 0, 128, 96, SSD1327_WHITE);
       display.setTextSize(1);
+      display.setTextColor(SSD1327_BLACK);
+      display.setCursor(10, 10);
+      display.println("DEPRESSION");
+      display.setCursor(10, 25);
+      display.println("CHECK");
+      display.setCursor(10, 40);
+      display.println("README");
+      display.setTextSize(2);
+      display.setCursor(45, 60);
+      display.println(depression);
       display.display();
   };
-  yield();
-  delay(100);
   
+  yield();
+  delay(1000);
 };
